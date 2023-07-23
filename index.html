@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Assignment 3</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark mb-3">
+        <div class="container">
+            <a href="#" class="navbar-brand TopBar">Health Calculator</a>
+        </div>
+    </nav>
+    <div class="container-md">
+        <div class="card mb-3">
+            <div class="card-header">Calculator for BMI, Bodyfat, BMR, and Daily Calories</div>
+            <div class="card-body">
+                <p class="lead">Enter Age</p>
+                <input type="number" id="age" class="form-control" placeholder="ex. 20">
+                <br>
+                <p class="lead">Enter Height (Meters)</p>
+                <input type="number" id="height" class="form-control" placeholder="ex. 1.923">
+                <br>
+                <p class="lead">Enter Weight (kg)</p>
+                <input type="number" id="weight" class="form-control" placeholder="ex. 71.23">
+                <br>
+                <button type="submit" class="btn btn-primary" id="calculate">Calculate</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="model bd-example-model-sm" id="infoDialog" tabindex="-1" role="dialog" aria-labelledby="infoDialog"
+        aria-hidden="true">
+        <div class="model-dialog model-sm">
+            <div class="model-content">
+                <div class="model-header">
+                    <div class="model-title"></div>
+                    <button type="button" class="close" data-dismiss="model" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="model-body text-justify">
+                    <div class="card">
+                        <ul class="list-group">
+                            <li class="list-group-item" id="bmi"></li>
+                            <li class="list-group-item" id="bodyfat"></li>
+                            <li class="list-group-item" id="bmr"></li>
+                            <li class="list-group-item" id="dailycal"></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="model-footer">
+                    <p id="footer-info"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    $("#calculate").click(async function getResults() {
+      var age = $("#age").val().trim();
+      var height = $("#height").val().trim();
+      var weight = $("#weight").val().trim();
+  
+      if (age === "" || age == undefined) {
+        alert("Oops, you forgot to enter a valid age in years.");
+        return;
+      } else if (height === "" || height == undefined) {
+        alert("Oops, you forgot to enter a valid height in meters.");
+        return;
+      } else if (weight === "" || weight == undefined) {
+        alert("Oops, you forgot to enter a valid weight in kg.");
+        return;
+      } else {
+        console.log(age);
+        console.log(height);
+        console.log(weight);
+  
+        try {
+          const bmiResponse = await fetch(`http://localhost:3000/bmi/${weight}/${height}`);
+          if (!bmiResponse.ok) {
+            throw new Error("Invalid item for BMI");
+          }
+          const bmiData = await bmiResponse.json();
+          console.log(bmiData);
+  
+          const bodyfatResponse = await fetch(`http://localhost:3000/bodyfat/${age}/${bmiData.bmi}`);
+          if (!bodyfatResponse.ok) {
+            throw new Error("Invalid item for Bodyfat");
+          }
+          const bodyfatData = await bodyfatResponse.json();
+          console.log(bodyfatData);
+  
+          const bmrResponse = await fetch(`http://localhost:3000/bmr/${age}/${weight}/${height}`);
+          if (!bmrResponse.ok) {
+            throw new Error("BMR failed to load");
+          }
+          const bmrData = await bmrResponse.json();
+          console.log(bmrData);
+  
+          const dailyCalResponse = await fetch(`http://localhost:3000/calories/${age}/${weight}/${height}`);
+          if (!dailyCalResponse.ok) {
+            throw new Error("Daily Calories failed to load");
+          }
+          const dailyCalData = await dailyCalResponse.json();
+          console.log(dailyCalData);
+  
+          // Display model
+          infoDialog.style.display = "block";
+  
+          // Map response data to HTML elements
+          $("#bmi").html("BMI: " + bmiData.bmi);
+          $("#bodyfat").html("Bodyfat %: " + bodyfatData.bodyfat);
+          $("#bmr").html("BMR: " + bmrData.bmr);
+          $("#dailycal").html("Daily Calories: " + dailyCalData.dailyCal);
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+    });
+  </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</body>
+
+</html>
